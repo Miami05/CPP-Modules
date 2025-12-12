@@ -2,20 +2,24 @@ CXX = c++
 
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 
-NAME = claptrap
+NAME = pointer
 
-SRCS = ClapTrap.cpp main.cpp
+SRCS = main.cpp
+
 OBJ = $(SRCS:.cpp=.o)
 
 all: $(NAME)
 
-$(NAME): $(OBJ)
-	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
+$(NAME):
+	$(CXX) $(CXXFLAGS) $(SRCS) -o $(NAME)
 
 clean:
-	rm -f $(OBJ)
+	rm -f $(NAME)
 
 fclean: clean
 	rm -f $(NAME)
 
 re: fclean all
+
+.PHONY: all clean fclean re
+
