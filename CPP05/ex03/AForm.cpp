@@ -49,7 +49,7 @@ const char *AForm::FormNotSignedException::what() const throw() {
 
 void AForm::beSigned(const Bureaucrat &b) {
     if (b.getGrade() > _gradeToSign)
-        throw GradeTooHighException();
+        throw GradeTooLowException();
     _signed = true;
 }
 
