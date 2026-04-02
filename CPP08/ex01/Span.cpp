@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <ctime>
 #include <limits.h>
-#include <limits>
+#include <numeric>
 #include <vector>
 
 const char* Span::FullException::what() const throw() {
@@ -43,14 +43,11 @@ unsigned int Span::shortestSpan() const {
         throw NotEnoughNumbersException();
     std::vector<int> tmp(_v);
     std::sort(tmp.begin(), tmp.end());
-    unsigned int best = std::numeric_limits<unsigned int>::max();
-    for (std::size_t i = 1; i < tmp.size(); ++i) {
-        long diff = static_cast<long>(tmp[i]) - static_cast<long>(tmp[i - 1]);
-        if (diff < 0) diff = -diff;
-        if (static_cast<unsigned long>(diff) < best)
-            best = static_cast<unsigned int>(diff);
-    }
-    return best;
+    std::vector<int> diffs(tmp.size());
+    std::adjacent_difference(tmp.begin(), tmp.end(), diffs.begin());
+    return static_cast<unsigned int>(
+        *std::min_element(diffs.begin() + 1, diffs.end())
+    );
 }
 
 unsigned int Span::longestSpan() const {

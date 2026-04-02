@@ -1,5 +1,5 @@
-#ifndef EASYFIND_HTTP
-#define EASYFIND_HTTP
+#ifndef EASYFIND_HPP
+#define EASYFIND_HPP
 
 #include <algorithm>
 #include <exception>

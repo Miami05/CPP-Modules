@@ -1,7 +1,6 @@
 #include <cstddef>
 #include <iostream>
 #include "Span.hpp"
-#include <nl_types.h>
 #include <vector>
 #include <cstdlib>
 #include <ctime>

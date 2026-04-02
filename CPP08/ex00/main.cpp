@@ -1,4 +1,3 @@
-// ex00/main.cpp  (tests)
 #include <iostream>
 #include <vector>
 #include <list>
@@ -14,7 +13,7 @@ static void testVector() {
     std::cout << "Vector test:\n";
     try {
         std::vector<int>::iterator it = easyfind(v, 20);
-        std::cout << "Found 20 at index: " << (it - v.begin()) << "\n"; // first occurrence
+        std::cout << "Found 20 at index: " << (it - v.begin()) << "\n";
     } catch (const std::exception& e) {
         std::cout << e.what() << "\n";
     }
