@@ -130,7 +130,7 @@ void BitcoinExchange::processFile(const std::string& inputPath) {
     while (std::getline(in, line)) {
         if (line.empty()) continue;
         if (firstNonEmptyLine) {
-            firstNonEmptyLine = true;
+            firstNonEmptyLine = false;
             if (trim(line) == "date | value")
                 continue;
         }
