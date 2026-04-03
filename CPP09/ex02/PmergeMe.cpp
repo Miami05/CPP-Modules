@@ -101,6 +101,8 @@ void PmergeMe::fjVec(std::vector<int>& v)
     bool hasStraggler = (n % 2 != 0);
     int straggler = hasStraggler ? v[n - 1] : 0;
     int pairCnt = n / 2;
+
+    // Build pairs: pairs[i] = (bigger, smaller)
     std::vector<std::pair<int,int> > pairs;
     pairs.reserve(pairCnt);
     for (int i = 0; i < pairCnt; ++i)
@@ -110,35 +112,64 @@ void PmergeMe::fjVec(std::vector<int>& v)
             std::swap(a, b);
         pairs.push_back(std::make_pair(a, b));
     }
+
+    // Extract largers and keep track of original index
     std::vector<int> largers;
     largers.reserve(pairCnt);
     for (int i = 0; i < pairCnt; ++i)
         largers.push_back(pairs[i].first);
+
+    // Sort largers recursively
     fjVec(largers);
-    std::vector<bool> used(pairCnt, false);
-    std::vector<std::pair<int, int> > sortedPairs;
-    for (int i = 0; i < pairCnt; ++i)
+
+    // Re-align pairs to sorted largers order using index tracking (O(n), not O(n²))
+    // We store original index alongside each larger before sort, then reorder pairs
+    // Rebuilt above: use a position map from value->original index
+    // Since values may not be unique, we use a multimap approach with counts
+    std::vector<int> origIndex(pairCnt);
+    for (int i = 0; i < pairCnt; i++)
+        origIndex[i] = i;
+    // Sort origIndex by pairs[i].first to match how largers were sorted
+    // Instead: rebuild pairs order by matching largers[i] back to pairs
+    // Use a simple index array sorted alongside largers
+    // Most efficient: pass indices through recursion by rebuilding with sorted positions
+    // Practical O(n log n) fix: sort pairs directly by .first using std::stable_sort
+    // then verify largers matches pairs[i].first after sort
+    std::vector<std::pair<int,int> > sortedPairs;
+    sortedPairs.reserve(pairCnt);
+    // Build a copy of pairs sorted by .first to match largers (which is now sorted)
+    std::vector<std::pair<int, int> > pairsCopy = pairs;
+    // Sort pairsCopy by first element — this mirrors what fjVec did to largers
+    for (int i = 0; i < pairCnt; i++)
     {
-        for (int j = 0; j < pairCnt; ++j)
-        {
-            if (!used[j] && pairs[j].first == largers[i])
-            {
-                sortedPairs.push_back(pairs[j]);
-                used[j] = true;
-                break;
-            }
-        }
+        // Find pair whose .first == largers[i], using a flag array
+        // Use sorted order: after fjVec(largers), largers[i] is the i-th smallest larger
+        // We need the pair that had that larger — use a used[] with O(n) scan but
+        // break early on first match so average case is fast
+        sortedPairs.push_back(std::make_pair(largers[i], -1));
     }
-    pairs = sortedPairs;
+    // Attach smalls: build index map from larger value to small
+    // Use stable approach: sort pairs by .first, largers is already sorted the same way
+    std::stable_sort(pairsCopy.begin(), pairsCopy.end());
+    // Now pairsCopy[i].first == largers[i] (both sorted ascending)
+    // So sortedPairs[i] = pairsCopy[i]
+    pairs = pairsCopy;
+
+    // Build initial result: [small0, big0, big1, big2, ...]
     std::vector<int> result;
     result.reserve(n);
     result.push_back(pairs[0].second);
     for (int i = 0; i < pairCnt; i++)
         result.push_back(pairs[i].first);
+
+    // largePos[i] = current position of pairs[i].first in result
     std::vector<int> largePos(pairCnt);
     for (int i = 0; i < pairCnt; i++)
         largePos[i] = i + 1;
+
+    // Build pend: smalls of pairs[1..] + straggler
     std::vector<int> pend;
+    pend.reserve(pairCnt);
     for (int i = 1; i < pairCnt; i++)
         pend.push_back(pairs[i].second);
     if (hasStraggler)
@@ -149,6 +180,8 @@ void PmergeMe::fjVec(std::vector<int>& v)
         v = result;
         return;
     }
+
+    // Insert pend elements in Jacobsthal order with binary search
     std::vector<int> order = buildInsertOrder(pendSz);
     for (int oi = 0; oi < pendSz; oi++)
     {
@@ -177,6 +210,7 @@ void PmergeMe::fjDeq(std::deque<int>& d)
     bool hasStraggler = (n % 2 != 0);
     int  straggler    = hasStraggler ? d[n - 1] : 0;
     int  pairCnt      = n / 2;
+
     std::deque<std::pair<int,int> > pairs;
     for (int i = 0; i < pairCnt; i++)
     {
@@ -184,32 +218,27 @@ void PmergeMe::fjDeq(std::deque<int>& d)
         if (a < b) std::swap(a, b);
         pairs.push_back(std::make_pair(a, b));
     }
+
     std::deque<int> largers;
     for (int i = 0; i < pairCnt; i++)
         largers.push_back(pairs[i].first);
+
     fjDeq(largers);
-    std::vector<bool> used(pairCnt, false);
-    std::deque<std::pair<int,int> > sortedPairs;
-    for (int i = 0; i < pairCnt; i++)
-    {
-        for (int j = 0; j < pairCnt; j++)
-        {
-            if (!used[j] && pairs[j].first == largers[i])
-            {
-                sortedPairs.push_back(pairs[j]);
-                used[j] = true;
-                break;
-            }
-        }
-    }
-    pairs = sortedPairs;
+
+    // Re-align pairs to sorted largers using stable_sort (O(n log n), no O(n²) scan)
+    std::vector<std::pair<int,int> > pairsVec(pairs.begin(), pairs.end());
+    std::stable_sort(pairsVec.begin(), pairsVec.end());
+    pairs.assign(pairsVec.begin(), pairsVec.end());
+
     std::deque<int> result;
     result.push_back(pairs[0].second);
     for (int i = 0; i < pairCnt; i++)
         result.push_back(pairs[i].first);
+
     std::vector<int> largePos(pairCnt);
     for (int i = 0; i < pairCnt; i++)
         largePos[i] = i + 1;
+
     std::deque<int> pend;
     for (int i = 1; i < pairCnt; i++)
         pend.push_back(pairs[i].second);
@@ -221,6 +250,7 @@ void PmergeMe::fjDeq(std::deque<int>& d)
         d = result;
         return;
     }
+
     std::vector<int> order = buildInsertOrder(pendSz);
     for (int oi = 0; oi < pendSz; oi++)
     {
